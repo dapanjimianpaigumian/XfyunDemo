@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">XfyunDemo</string>
+    <string name="startReco">开始识别</string>
+    <string name="button_Reco">语音识别</string>
+    <string name="button_Tran">语音合成</string>
+</resources>
