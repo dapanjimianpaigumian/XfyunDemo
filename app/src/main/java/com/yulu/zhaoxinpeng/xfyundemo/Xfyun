@@ -1,0 +1,32 @@
+讯飞：
+1. 注册账号
+2. 结合产品服务和资料库查看相关功能
+
+准备：
+1. 创建应用
+2. 下载SDK
+
+集成：
+1. jar包、so动态库添加：so文件放置到libs下面，
+    在build.gradle里面声明
+    sourceSets{
+            main{
+                jniLibs.srcDir 'libs'
+            }
+        }
+    libs所有的放置到项目下面。
+2. 添加权限
+3. 初始化：创建一个Application，在onCreate里面初始化（填入APPId）
+           要在清单文件里面指明。
+
+功能使用：
+1. 听写  2017_4_17
+    1. 流程
+    2. 查看API：下载的SDK里面有一个html的文件
+    3. 结合官网和Demo完成自己想要的结果
+
+2. 合成
+
+3. 识别：上传联系人、语法等
+
+Socket
