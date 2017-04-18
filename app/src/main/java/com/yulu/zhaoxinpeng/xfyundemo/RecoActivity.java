@@ -28,6 +28,7 @@ import java.util.LinkedHashMap;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Unbinder;
 
 /**
  * 实现语音识别功能
@@ -46,12 +47,13 @@ public class RecoActivity extends AppCompatActivity {
     // 用于处理结果
     private HashMap<String, String> mResults = new LinkedHashMap<>();
     private RecognizerDialog mRecognizerDialog;
+    private Unbinder bind;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reco);
-        ButterKnife.bind(this);
+        bind = ButterKnife.bind(this);
 
         //1.创建SpeechRecognizer对象，第二个参数：本地听写时传InitListener
         mSpeechRecognizer = SpeechRecognizer.createRecognizer(this, null);//mRecognizerListener
@@ -152,10 +154,10 @@ public class RecoActivity extends AppCompatActivity {
         mTvShow.setText(resultBuffer.toString());
     }
 
-    @OnClick({R.id.button_start,R.id.button_push_contacts})
+    @OnClick({R.id.button_start, R.id.button_push_contacts})
     public void onViewClicked(View view) {
 
-        switch (view.getId()){
+        switch (view.getId()) {
             case R.id.button_start:
                 // 开始进行录音和转换
                 //mSpeechRecognizer.startListening(mRecognizerListener);
@@ -182,7 +184,7 @@ public class RecoActivity extends AppCompatActivity {
         //异步查询联系人接口，通过onContactQueryFinish接口回调
         // 获取联系人监听器。
         // 上传联系人监听器。
-        ContactManager contactManager = ContactManager.createManager(this,mContactListener);
+        ContactManager contactManager = ContactManager.createManager(this, mContactListener);
         // 异步查询
         contactManager.asyncQueryAllContactsName();
     }
@@ -199,8 +201,8 @@ public class RecoActivity extends AppCompatActivity {
 
             // 重点的：更新词典
             int contact = mSpeechRecognizer.updateLexicon("contact", s, mLexiconListener);
-            if (contact!= ErrorCode.SUCCESS){
-                Log.i("TAG","更新失败了"+contact);
+            if (contact != ErrorCode.SUCCESS) {
+                Log.i("TAG", "更新失败了" + contact);
             }
         }
     };
@@ -209,10 +211,10 @@ public class RecoActivity extends AppCompatActivity {
     private LexiconListener mLexiconListener = new LexiconListener() {
         @Override
         public void onLexiconUpdated(String s, SpeechError speechError) {
-            if (speechError!=null){
-                Log.i("TAG","更新错误"+speechError.toString());
-            }else {
-                Log.i("TAG","上传成功了");
+            if (speechError != null) {
+                Log.i("TAG", "更新错误" + speechError.toString());
+            } else {
+                Log.i("TAG", "上传成功了");
             }
         }
     };
@@ -234,4 +236,10 @@ public class RecoActivity extends AppCompatActivity {
             Toast.makeText(RecoActivity.this, speechError.getPlainDescription(true), Toast.LENGTH_SHORT).show();
         }
     };
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        bind.unbind();
+    }
 }

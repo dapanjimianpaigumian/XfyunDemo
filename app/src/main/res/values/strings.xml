@@ -4,4 +4,9 @@
     <string name="button_Reco">语音识别</string>
     <string name="button_Tran">语音合成</string>
     <string name="push_contacts">上传联系人</string>
+    <string name="button_synthesizer">开始合成语音</string>
+    <string name="button_pause">暂停</string>
+    <string name="button_resume">恢复</string>
+    <string name="button_stop">停止</string>
+    <string name="words">昨天晚上，我明明对准那个洞可就是插不进去。。试了好几次都插不进去，感觉自己好无能。我不禁大喊了一声，穿根针怎么这么难！</string>
 </resources>
