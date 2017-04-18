@@ -3,10 +3,13 @@ package com.yulu.zhaoxinpeng.xfyundemo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.iflytek.cloud.ErrorCode;
+import com.iflytek.cloud.LexiconListener;
 import com.iflytek.cloud.RecognizerListener;
 import com.iflytek.cloud.RecognizerResult;
 import com.iflytek.cloud.SpeechConstant;
@@ -14,6 +17,7 @@ import com.iflytek.cloud.SpeechError;
 import com.iflytek.cloud.SpeechRecognizer;
 import com.iflytek.cloud.ui.RecognizerDialog;
 import com.iflytek.cloud.ui.RecognizerDialogListener;
+import com.iflytek.cloud.util.ContactManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,6 +38,8 @@ public class RecoActivity extends AppCompatActivity {
     Button mBtnStartReco;
     @BindView(R.id.tv_show)
     TextView mTvShow;
+    @BindView(R.id.button_push_contacts)
+    Button mBtnPushContacts;
 
     private SpeechRecognizer mSpeechRecognizer;
 
@@ -48,10 +54,10 @@ public class RecoActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         //1.创建SpeechRecognizer对象，第二个参数：本地听写时传InitListener
-        mSpeechRecognizer = SpeechRecognizer.createRecognizer(this, null);
+        mSpeechRecognizer = SpeechRecognizer.createRecognizer(this, null);//mRecognizerListener
 
-        //1.创建SpeechRecognizer对象，第二个参数：本地听写时传InitListener
-        mRecognizerDialog = new RecognizerDialog(this,null);
+        //1.创建RecognizerDialog对象，第二个参数：本地听写时传InitListener
+        mRecognizerDialog = new RecognizerDialog(this, null);
 
         // 2. 设置SDK参数
         setParameter();
@@ -123,6 +129,7 @@ public class RecoActivity extends AppCompatActivity {
         }
     };
 
+    // 处理结果
     private void printResult(RecognizerResult results) {
         String text = JsonParser.parseIatResult(results.getResultString());
 
@@ -145,26 +152,79 @@ public class RecoActivity extends AppCompatActivity {
         mTvShow.setText(resultBuffer.toString());
     }
 
-    @OnClick(R.id.button_start)
-    public void onViewClicked() {
-        // 开始进行录音和转换
-        //mSpeechRecognizer.startListening(mRecognizerListener);
+    @OnClick({R.id.button_start,R.id.button_push_contacts})
+    public void onViewClicked(View view) {
 
-        mTvShow.setText(null);
-        mResults.clear();
-        setParameter();
-        // 带UI效果的
-        mRecognizerDialog.setListener(dialogListener);
-        mRecognizerDialog.show();
+        switch (view.getId()){
+            case R.id.button_start:
+                // 开始进行录音和转换
+                //mSpeechRecognizer.startListening(mRecognizerListener);
+
+                mTvShow.setText(null);
+                mResults.clear();
+                setParameter();
+                // 带UI效果的
+                mRecognizerDialog.setListener(dialogListener);
+                mRecognizerDialog.show();
+                break;
+            case R.id.button_push_contacts:
+                upContacts();
+                break;
+
+        }
+
     }
 
+    //---------------------------------上传联系人-----------------------------------------
+    // 上传联系人
+    private void upContacts() {
+        //获取ContactManager实例化对象
+        //异步查询联系人接口，通过onContactQueryFinish接口回调
+        // 获取联系人监听器。
+        // 上传联系人监听器。
+        ContactManager contactManager = ContactManager.createManager(this,mContactListener);
+        // 异步查询
+        contactManager.asyncQueryAllContactsName();
+    }
+
+    // 联系人获取监听
+    private ContactManager.ContactListener mContactListener = new ContactManager.ContactListener() {
+
+        // 当获取结束的时候
+        @Override
+        public void onContactQueryFinish(String s, boolean b) {
+            //指定引擎类型
+            mSpeechRecognizer.setParameter(SpeechConstant.ENGINE_TYPE, SpeechConstant.TYPE_CLOUD);
+            mSpeechRecognizer.setParameter(SpeechConstant.TEXT_ENCODING, "utf-8");
+
+            // 重点的：更新词典
+            int contact = mSpeechRecognizer.updateLexicon("contact", s, mLexiconListener);
+            if (contact!= ErrorCode.SUCCESS){
+                Log.i("TAG","更新失败了"+contact);
+            }
+        }
+    };
+
+    // 上传联系人(更新词表的)监听
+    private LexiconListener mLexiconListener = new LexiconListener() {
+        @Override
+        public void onLexiconUpdated(String s, SpeechError speechError) {
+            if (speechError!=null){
+                Log.i("TAG","更新错误"+speechError.toString());
+            }else {
+                Log.i("TAG","上传成功了");
+            }
+        }
+    };
+
+    //-------------------------------------UI听写的监听----------------------------------------
     // UI听写的监听
     private RecognizerDialogListener dialogListener = new RecognizerDialogListener() {
 
         // 拿到结果
         @Override
         public void onResult(RecognizerResult recognizerResult, boolean b) {
-            Log.i("TAG",recognizerResult.getResultString());
+            Log.i("TAG", recognizerResult.getResultString());
             printResult(recognizerResult);
         }
 
