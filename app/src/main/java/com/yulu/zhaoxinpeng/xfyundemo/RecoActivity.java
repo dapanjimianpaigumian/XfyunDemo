@@ -5,12 +5,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.iflytek.cloud.RecognizerListener;
 import com.iflytek.cloud.RecognizerResult;
 import com.iflytek.cloud.SpeechConstant;
 import com.iflytek.cloud.SpeechError;
 import com.iflytek.cloud.SpeechRecognizer;
+import com.iflytek.cloud.ui.RecognizerDialog;
+import com.iflytek.cloud.ui.RecognizerDialogListener;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -36,6 +39,7 @@ public class RecoActivity extends AppCompatActivity {
 
     // 用于处理结果
     private HashMap<String, String> mResults = new LinkedHashMap<>();
+    private RecognizerDialog mRecognizerDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +49,9 @@ public class RecoActivity extends AppCompatActivity {
 
         //1.创建SpeechRecognizer对象，第二个参数：本地听写时传InitListener
         mSpeechRecognizer = SpeechRecognizer.createRecognizer(this, null);
+
+        //1.创建SpeechRecognizer对象，第二个参数：本地听写时传InitListener
+        mRecognizerDialog = new RecognizerDialog(this,null);
 
         // 2. 设置SDK参数
         setParameter();
@@ -84,13 +91,13 @@ public class RecoActivity extends AppCompatActivity {
         // 开始录音
         @Override
         public void onBeginOfSpeech() {
-
+            Toast.makeText(RecoActivity.this, "开始录音", Toast.LENGTH_SHORT).show();
         }
 
         // 结束录音
         @Override
         public void onEndOfSpeech() {
-
+            Toast.makeText(RecoActivity.this, "结束录音", Toast.LENGTH_SHORT).show();
         }
 
         //听写结果回调接口(返回Json格式结果，用户可参见附录12.1)；
@@ -141,6 +148,30 @@ public class RecoActivity extends AppCompatActivity {
     @OnClick(R.id.button_start)
     public void onViewClicked() {
         // 开始进行录音和转换
-        mSpeechRecognizer.startListening(mRecognizerListener);
+        //mSpeechRecognizer.startListening(mRecognizerListener);
+
+        mTvShow.setText(null);
+        mResults.clear();
+        setParameter();
+        // 带UI效果的
+        mRecognizerDialog.setListener(dialogListener);
+        mRecognizerDialog.show();
     }
+
+    // UI听写的监听
+    private RecognizerDialogListener dialogListener = new RecognizerDialogListener() {
+
+        // 拿到结果
+        @Override
+        public void onResult(RecognizerResult recognizerResult, boolean b) {
+            Log.i("TAG",recognizerResult.getResultString());
+            printResult(recognizerResult);
+        }
+
+        // 错误的时候
+        @Override
+        public void onError(SpeechError speechError) {
+            Toast.makeText(RecoActivity.this, speechError.getPlainDescription(true), Toast.LENGTH_SHORT).show();
+        }
+    };
 }
